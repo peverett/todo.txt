@@ -1,0 +1,7 @@
+# Python artifacts
+*.pyc
+__pycache__/
+
+# config and text files are not part of the repo
+*.txt
+*.cfg
