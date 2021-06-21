@@ -7,20 +7,64 @@ More information and mailing list at http://todotxt.com
 ###############################################################################
 # Imports
 
-import os
 import sys
-from datetime import date
 
-if sys.version_info < (3, 6):
-    raise SystemExit("Python version 3.6 or better required.")
+# Uses the dataclass class, so python 3.7 or better is required
+if sys.version_info < (3, 7):
+    raise SystemExit("Python version 3.7 or better required.")
+
+import os
+from datetime import date
+from dataclasses import dataclass
 
 ###############################################################################
 # Common functions
 
-def todo_error(error_msg):
+def todo_error(error_msg: str):
     """Raises SystemError in a specific format, which causes program 
     termination."""
     raise SystemExit(f"--\nTODO:\tERROR: {error_msg}")
+
+###############################################################################
+
+@dataclass
+class Action():
+    """Represents an 'action' in the to do list."""
+    task: str                                       # The text of the task
+    added: str = date.today().strftime("%Y-%m-%d")  # Current date, if not set
+    done: str = None                                # date task was done
+    _priority: str = None                           # A, B, C, etc...
+    context: str = None                             # One @ context string
+    project: str = None                             # One + project string
+    due: str = None                                 # Due date
+
+    def __str__(self):
+        """String representation"""
+        astr = list()
+        if self.done:
+            astr.append("X")
+            astr.append(self.done)
+        if self.priority:
+            astr.append(f"({self.priority})")
+        astr.append(self.added)
+        astr.append(self.task)
+        if self.context:
+            astr.append(self.context)
+        if self.project:
+            astr.append(self.project)
+        if self.due:
+            astr.append(f"Due: {self.due}")
+        return " ".join(astr)
+    
+    @property 
+    def priority(self) -> str:
+        """Get the priority"""
+        return self._priority
+
+    @priority.setter
+    def priority(self, pri: str):
+        """Set the priority, a single letter from A to Z (capital)"""
+        self._priority = pri.upper()[0]             # Only take first char
 
 ###############################################################################
 
@@ -29,7 +73,7 @@ class todo(object):
     files.
     """
 
-    def __init__(self, todo_dir):
+    def __init__(self, todo_dir: str):
         """Initialise todo class by loading the list of todo actions from a 
         file.
 
