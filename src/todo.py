@@ -14,8 +14,9 @@ if sys.version_info < (3, 7):
     raise SystemExit("Python version 3.7 or better required.")
 
 import os
+import re 
 from datetime import date
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 ###############################################################################
 # Common functions
@@ -29,11 +30,19 @@ def todo_error(error_msg: str):
 
 @dataclass
 class Action():
-    """Represents an 'action' in the to do list."""
+    """Represents an 'action' in the to do list, using dataclass. 
+    Use the __str__() method to output the action as a string in the following format:
+        X {done date} ({priority}) {task} @{context} +{project} DUE:{due date}
+    So a task that isn't yet completed could look like this: 
+        (A) 2021-06-24 Invade planet earth @SolarSysetm +KillAllHumans DUE: 2021-06-24
+    And once that task is done, it would look like this:
+        X 2021-06-24 (A) 2021-06-24 Invade planet eartth @SolarSystem +KillAllHumans DUE: 2021-06-24
+    """
     task: str                                       # The text of the task
     added: str = date.today().strftime("%Y-%m-%d")  # Current date, if not set
     done: str = None                                # date task was done
-    _priority: str = None                           # A, B, C, etc...
+    priority: str = None                            # A, B, C, etc...
+    _priority: str = field(init=False)              # setter will init this       
     context: str = None                             # One @ context string
     project: str = None                             # One + project string
     due: str = None                                 # Due date
@@ -49,11 +58,11 @@ class Action():
         astr.append(self.added)
         astr.append(self.task)
         if self.context:
-            astr.append(self.context)
+            astr.append(f"@{self.context}")
         if self.project:
-            astr.append(self.project)
+            astr.append(f"+{self.project}")
         if self.due:
-            astr.append(f"Due: {self.due}")
+            astr.append(f"DUE:{self.due}")
         return " ".join(astr)
     
     @property 
@@ -62,9 +71,11 @@ class Action():
         return self._priority
 
     @priority.setter
-    def priority(self, pri: str):
-        """Set the priority, a single letter from A to Z (capital)"""
-        self._priority = pri.upper()[0]             # Only take first char
+    def priority(self, p: str):
+        """Set the priority, a single letter from A to Z (capital), can also
+        be None."""
+        self._priority = p.upper()[0] if isinstance(p, str) else None
+
 
 ###############################################################################
 
@@ -121,13 +132,36 @@ class todo(object):
         task_str = " ".join(task_words)
         self.__tasks.append(task_str)
     
+###############################################################################
 
+# Regexs
+DATE_RE = re.compile( r"(\d{4}-\d{2}-\d{2})\s" )     # ISO 8601 date 
+PRIORITY_RE = re.compile( r"^\(([A-Z])\)" )          # Priority A, B , C 
+PROJECT_RE = re.compile( r"(\W\+\w+)" )              # +<word>
+CONTEXT_RE = re.compile( r"(\W\@\w+)" )              # @<word>
+DONE_RE = re.compile( r"^X\s" )                      # X is first char
+LINE_NO_RE = re.compile( r"(^\d+\s+)(\S.*)" )
+
+def str_to_action(task: str) -> Action:
+    """From a todo task string input, break the string into the required 
+    field and create a Action instance for that task.
+    """
+    #TODO implement
+    pass
 
 ###############################################################################
 
 def main():
     """Main function."""
     
-    td = todo(os.path.dirname(__file__))
+    #td = todo(os.path.dirname(__file__))
+    one = Action("A simple task")
+    print(one)
     #TODO Try and load Config File
     #TODO process command line
+
+
+###############################################################################
+
+if __name__ == "__main__":
+    main()
