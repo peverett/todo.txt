@@ -111,7 +111,100 @@ def test_action_with_everything_then_set_to_done(today, task):
 
 ###############################################################################
 
-def test_str_to_action_simple(task, action):
+def check_sta(task_str):
+    """Convert the task_str string to an Action, then check the Action str 
+    matches the original task_str.
+    """
+    act = str_to_action(task_str)
+    #print(f"\nCONVERT_STA\n\t{task_str}\n\t{act}")
+    assert task_str == f"{act}"
+
+def test_str_to_action_simple():
     """Convert a simple task string to an Action"""
-    actual = str_to_action(task)
-    assert f"{action}" == f"{actual}"
+    act = str_to_action("2021-07-07 Invade Planet Earth")
+    assert act.added == "2021-07-07"
+    assert act.done == None
+    assert act.task == "Invade Planet Earth"
+    assert act.project == None
+    assert act.context == None
+    assert act.due == None
+
+def test_str_to_action_with_project():
+    """Convert a task string with project to Action"""
+    act = str_to_action("2021-07-07 Invade Planet Earth +KillAllHumans")
+    assert act.priority == None
+    assert act.added == "2021-07-07"
+    assert act.done == None
+    assert act.task == "Invade Planet Earth"
+    assert act.project == "KillAllHumans"
+    assert act.context == None
+    assert act.due == None
+
+def test_str_to_action_with_context():
+    """Convert a task string with context to Action"""
+    act = str_to_action("2021-07-07 Invade Planet Earth @SolarSystem")
+    assert act.priority == None
+    assert act.added == "2021-07-07"
+    assert act.done == None
+    assert act.task == "Invade Planet Earth"
+    assert act.project == None
+    assert act.context == "SolarSystem"
+    assert act.due == None
+
+def test_str_to_action_with_context_and_project():
+    """Convert a task string with context and context and project to Action"""
+    act = str_to_action("2021-07-07 Invade Planet Earth @SolarSystem +KillAllHumans")
+    assert act.priority == None
+    assert act.added == "2021-07-07"
+    assert act.done == None
+    assert act.task == "Invade Planet Earth"
+    assert act.project == "KillAllHumans"
+    assert act.context == "SolarSystem"
+    assert act.due == None
+
+def test_str_to_action_with_priority():
+    """Convert a task string with priority to Action"""
+    act = str_to_action("(A) 2021-07-07 Invade Planet Earth")
+    assert act.priority == "A"
+    assert act.added == "2021-07-07"
+    assert act.done == None
+    assert act.task == "Invade Planet Earth"
+    assert act.project == None
+    assert act.context == None
+    assert act.due == None
+
+def test_str_to_action_task_that_is_done():
+    """Convert a task string that has been done to Action"""
+    act = str_to_action("X 2021-07-07 2021-06-06 Invade Planet Earth")
+    #print(f"{act}")
+    assert act.priority == None
+    assert act.task == "Invade Planet Earth"
+    assert act.added == "2021-06-06"
+    assert act.done == "2021-07-07"
+    assert act.project == None
+    assert act.context == None
+    assert act.due == None
+
+def test_str_to_action_done_task_with_priority():
+    """Convert a done task string with priority to Action"""
+    act = str_to_action("X 2021-07-07 (B) 2021-06-06 Invade Planet Earth")
+    assert act.priority == "B"
+    assert act.task == "Invade Planet Earth"
+    assert act.added == "2021-06-06"
+    assert act.done == "2021-07-07"
+    assert act.project == None
+    assert act.context == None
+    assert act.due == None
+
+
+def test_str_to_action_with_due_date():
+    """Convert a task with DUE date to Action"""
+    act = str_to_action("2021-06-06 Invade Planet Earth DUE:2021-07-07")
+    assert act.priority == None
+    assert act.task == "Invade Planet Earth"
+    assert act.added == "2021-06-06"
+    assert act.done == None
+    assert act.project == None
+    assert act.context == None
+    assert act.due == "2021-07-07"
+

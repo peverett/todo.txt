@@ -136,18 +136,64 @@ class todo(object):
 
 # Regexs
 DATE_RE = re.compile( r"(\d{4}-\d{2}-\d{2})\s" )     # ISO 8601 date 
-PRIORITY_RE = re.compile( r"^\(([A-Z])\)" )          # Priority A, B , C 
-PROJECT_RE = re.compile( r"(\W\+\w+)" )              # +<word>
-CONTEXT_RE = re.compile( r"(\W\@\w+)" )              # @<word>
+PRIORITY_RE = re.compile( r"^\(([A-Z])\)\s" )        # Priority A, B , C 
+PROJECT_RE = re.compile( r"\W\+(\w+)" )              # +<word>
+CONTEXT_RE = re.compile( r"\W\@(\w+)" )              # @<word>
 DONE_RE = re.compile( r"^X\s" )                      # X is first char
+DUE_RE = re.compile( r"DUE:\s*(\d{4}-\d{2}-\d{2})", re.IGNORECASE )
 LINE_NO_RE = re.compile( r"(^\d+\s+)(\S.*)" )
 
 def str_to_action(task: str) -> Action:
     """From a todo task string input, break the string into the required 
-    field and create a Action instance for that task.
+    fields and create an Action instance for that task.
     """
-    #TODO implement
-    pass
+    def match(match_re, input):
+        "RegEx matches at the start of the string"
+        res = match_re.match(input)
+        if res:
+            match_str = res.groups()[0]
+            input = input[res.end():]
+        else:
+            match_str = None
+        return (match_str, input.strip())
+
+    if DONE_RE.match(task):
+        (done_date, task) = match(DATE_RE, task[2:])
+    else:
+        done_date = None
+
+    (priority, task) = match(PRIORITY_RE, task)
+    (added, task) = match(DATE_RE, task)
+
+    def search(search_re, input):
+        """Regex search anywhere in the string the string without the regex part"""
+        res = search_re.search(input)
+        if res:
+            search_str = res.groups()[0]
+            input = "".join([
+                input[:res.start()],
+                input[res.end():]
+            ])
+        else:
+            search_str = None
+        return (search_str, input.strip())                
+
+    (project, task) = search(PROJECT_RE, task)
+    (context, task) = search(CONTEXT_RE, task)
+    (due, task) = search(DUE_RE, task)
+    
+    #print(f"\nEXTRACTED:\n\t{done_date=}\n\t{priority=}\n\t{added=}\n\t{task=}\n\t{context=}\n\t{project=}")
+
+    return Action(
+        task = task, 
+        done = done_date,
+        priority = priority,
+        added = added,
+        context = context,
+        project = project,
+        due = due
+        )
+
 
 ###############################################################################
 
